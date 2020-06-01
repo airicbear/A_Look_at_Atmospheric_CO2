@@ -1,0 +1,376 @@
+#+title: A Look at Atmospheric CO_2
+#+author: Eric Nguyen
+#+date: December 12, 2018
+
+* Description
+
+  The original document can be found at
+  http://sustainabilitymath.org/word/Mauna-Loa-CO2.docx. \\
+
+  \noindent A Look at Atmospheric CO_2 \\
+  Produced by Thomas J. Pfaff \\
+  Ithaca College \\
+  Updated June 2018 \\
+
+  #+caption: Figure 1 Atmospheric CO2 data, 1950-2017, from the Mauna Loa site, ftp://aftp.cmdl.noaa.gov/products/trends/co2/co2_annmean_mlo.txt, with a fitted curve.
+  #+label: fig:figure-01
+  #+name: fig:figure-01
+  [[./figures/figure-01.jpg]]
+
+** Note
+
+  According to Warren[fn:2], at \(1^{\circ}\) Celsius, in addition to the trends
+  we are already observing, oceans will further acidify, natural
+  ecosystems will start to collapse, and as many as 18-60 million people
+  in the developing world will go hungry.
+  At \(1.5^{\circ}\) Celsius the Greenland ice sheet will melt, eventually causing
+  a 7m rise in sea level, inundating coastal areas.
+  At \(2^{\circ}\) Celsius agricultural yields in the rich nations will start to
+  fall and 1-3 billion people will experience water scarcity.
+  At \(3^{\circ}\) Celsius the Amazon rainforest is expected to collapse and at
+  \(4^{\circ}\) Celsius most of Africa and Australia will lose all agricultural
+  production.
+
+* Questions
+
+   Answer the following questions using the fitted curve,
+   \(\hat{y} = 310.42336317 + 0.52063260x + 0.01345947x^2\),
+   that is represented in [[fig:figure-01][Figure 1]].
+
+** Question 1
+
+   Find a model with output Average MH4 in PPB and input years (or years after 1950).
+   [Either delete this question or the figure, in which case provide the data.]
+   
+   -----
+
+   First, we need to extract the data from the 'data.txt' file.
+
+   #+begin_src python :session :exports both :results value table
+     # This code snippet extracts the data from 'data.txt'
+     %config InlineBackend.figure_format='retina'
+
+     import numpy as np
+     import matplotlib.pyplot as plt
+     import pandas as pd
+
+     data = pd.read_csv("data.txt")
+
+     # Years after 1950, instead of actual years
+     data["year"] = data["year"] - 1950
+
+     # Print head
+     head = data.head()
+     [list(head)] + [None] + head.values.tolist()
+   #+end_src
+
+   #+RESULTS:
+   | year |   mean |  unc |
+   |------+--------+------|
+   |  9.0 | 315.97 | 0.12 |
+   | 10.0 | 316.91 | 0.12 |
+   | 11.0 | 317.64 | 0.12 |
+   | 12.0 | 318.45 | 0.12 |
+   | 13.0 | 318.99 | 0.12 |
+
+   Once we've extracted the data, we can make a visualization.
+
+   #+begin_src python :session :exports both :file ./figures/data.png
+     # This code snippet plots the data from 'data.txt'
+     def plot_config(size=(10, 10),
+                     xlab = "Years after 1950",
+                     ylab = "ppm"):
+         plt.figure(figsize=size)
+         plt.xlabel(xlab)
+         plt.ylabel(ylab)
+         plt.grid()
+
+     def scatterplot():
+         plot_config()
+         plt.scatter(data["year"],
+                     data["mean"],
+                     marker="s",
+                     facecolors="none",
+                     edgecolors="black")
+
+     scatterplot()
+     plt.savefig("figures/data.png")
+   #+end_src
+
+   #+RESULTS:
+   [[file:./figures/data.png]]
+
+   Using the data, we can create a model using NumPy's =polyfit= function.
+
+   #+begin_src python :session :exports both :results output
+     # This code snippet creates the provided model
+     # as well as generating a new model based on np.polyfit
+
+     # Model given in the question for comparison
+     old_model = np.poly1d([0.01345947, 0.52063260, 310.42336317])
+     print("Old model:")
+     print(old_model, "\n")
+
+     # Model using newer data
+     fit = np.polyfit(data["year"], data["mean"], 2)
+     model = np.poly1d(fit)
+     print("New model:")
+     print(model)
+   #+end_src
+
+   #+RESULTS:
+   : Old model:
+   :          2
+   : 0.01346 x + 0.5206 x + 310.4 
+   : 
+   : New model:
+   :          2
+   : 0.01249 x + 0.6027 x + 308.9
+
+   With our models ready, we can plot them to compare them visually.
+
+   #+begin_comment
+   File results were buggy---resorted to hardcoded link.
+   #+end_comment
+
+   #+begin_src python :session :exports both :results none
+     # This code snippet plots the models
+     x = np.linspace(min(data["year"]), max(data["year"]), 1000)
+     scatterplot()
+     plt.plot(x, old_model(x), color="blue", lw=2)
+     plt.plot(x, model(x), color="red", lw=2)
+     plt.savefig("figures/models.png")
+   #+end_src
+
+   #+results:
+   [[./figures/models.png]]
+
+   Here, we NumPy provides us with the following model:
+
+   \[\hat{y} = 0.01249x^2 + 0.6027x + 308.9.\]
+
+   Indeed, this closely matches that of the model provided
+   to us:
+
+   \[\hat{y} = 310.42336317 + 0.52063260x + 0.01345947x^2\]
+
+   As an additional check, we can also compare the models
+   visually using the plots and see that they match each
+   other when plotted.
+
+** Question 2
+
+   According to the model what will CO_2 levels be in 2050?
+
+   -----
+
+   #+begin_src python :session :exports both :results value
+     model(2050 - 1950)
+   #+end_src
+
+   #+RESULTS:
+   : 494.0709782199019
+
+   According to the model, there will be approximately
+   494.071 ppm of CO_2 in the atmosphere by 2050.
+
+** Question 3
+
+   What is the rate of change of CO_2 in 2017
+   (the last year of the data set) and what is
+   the percentage rate of change?
+
+   -----
+
+   Taking the derivative of the model provided by [[Question 1][Question 1]],
+   we find the rate of change of CO_2 to be modeled by
+
+   \[\hat{y}' = 0.02498x + 0.6027.\]
+
+   We can verify this in code:
+
+   #+begin_src python :session :exports both :results value
+     rate_of_change = np.poly1d([model.c[0] * 2, model.c[1]])
+     rate_of_change
+   #+end_src
+
+   #+RESULTS:
+   :  
+   : 0.02497 x + 0.6027
+
+   Now all we need to do is use that model to find the
+   rate of change in 2017:
+
+   #+begin_src python :session :exports both :results value
+     q3a = rate_of_change(2017 - 1950)
+     q3a
+   #+end_src
+
+   #+RESULTS:
+   : 2.276033781313511
+
+   So, the rate of change of CO_2 in 2017 is approximately
+   2.276 ppm/year or 227.6%.
+
+** Question 4
+
+   Assuming that CO_2 levels continue to grow constantly at the
+   2017 rates, what will the CO_2 levels reach in 2050?
+
+   -----
+
+   If the CO_2 levels were to continue to grow constantly
+   at the 2017 rates, then we can represent this model
+   by taking the rate and the CO_2 level at 2017.
+
+   #+begin_src python :session :exports both :results value
+     q4_model = np.poly1d([q3a, list(data["mean"])[-1]])
+     q4_model
+   #+end_src
+
+   #+RESULTS:
+   :  
+   : 2.276 x + 406.6
+
+   Plotted, the assumed model would look like this:
+
+   #+begin_src python :session :e
+yes
+ports both :results none
+     x = np.linspace(0, 2050 - 2017 + 5, 100)
+     plot_config(xlab = "Years after 2017")
+     plt.plot(x, q4_model(x))
+     plt.savefig("figures/model-q4.png")
+   #+end_src
+
+   #+RESULTS:
+   [[./figures/model-q4.png]]
+
+   Then the predicted CO_2 level by 2050 would be calculated as so:
+
+   #+begin_src python :session :exports both :results value
+     q4_model(2050 - 2017)
+   #+end_src
+
+   #+RESULTS:
+   : 481.6591147833459
+
+   So according to this model, the CO_2 level by 2050 will
+   reach approximately 481.67 ppm.
+
+** Question 5
+
+   Atmospheric CO_2 levels of 450 ppm yield a likely chance that
+   global average temperature increases will be at least \(2^{\circ}\)
+   Celsius. [fn:1]
+   According to the model, in what year do we reach a CO_2 level of 450 ppm?
+   If we assume CO_2 levels continue to grow constantly at the 2017 rates,
+   in what year do we reach a CO_2 level of 450 ppm?
+
+   -----
+
+   To find the year we reach a CO_2 level of 450 ppm according to the model,
+   we can translate the model down vertically by 450 and then take the
+   largest positive root.
+
+   #+begin_src python :session :exports both :results value
+     q5a_m1 = np.poly1d([model.c[0], model.c[1], model.c[2] - 450])
+     q5a_p1 = max(q5a_m1.roots)
+     q5a_p1
+   #+end_src
+
+   #+RESULTS:
+   : 84.86137790253937
+
+   Ensuring that this year indeed corresponds to a CO_2 level of 450 ppm,
+   we can plug it back into the model.
+
+   #+begin_src python :session :exports both :results value
+     model(q5a_p1)
+   #+end_src
+
+   #+RESULTS:
+   : 450.0
+
+   We can then repeat the same steps for the 2017 model.
+
+   #+begin_src python :session :exports both :results value
+     q5a_m2 = np.poly1d([q4_model.c[0], q4_model.c[1] - 450])
+     q5a_p2 = max(q5a_m2.roots)
+     q5a_p2
+   #+end_src
+
+   #+RESULTS:
+   : 19.09022632121249
+
+   This produces a very different value.
+   That is because the 2017 model predicts the CO_2 levels
+   starting from 2017, however we want a prediction of the
+   years since 1950, not 2017.
+   The following calculation will provide us with this.
+
+   #+begin_src python :session :exports both :results value
+     2017 - 1950 + q5a_p2
+   #+end_src
+
+   #+RESULTS:
+   : 86.0902263212125
+
+   Then we also verify this prediction.
+
+   #+begin_src python :session :exports both :results value
+     q4_model(q5a_p2)
+   #+end_src
+
+   #+RESULTS:
+   : 450.0
+
+   According to the model, we reach a CO_2 level of 450 ppm
+   approximately 84.86 years after 1950, so in the year 2034.
+
+   If we assume CO_2 levels continue to grow constantly at the
+   2017 rates, we would reach a CO_2 level of 450 ppm in
+   approximately 86.09 years after 1950, so the year 2036.
+
+** Question 6
+
+   Fill in the blank:
+   In order to avoid reaching 450 ppm of atmospheric CO_2 the
+   trend in the data would have to become (???Calculus Term???).
+
+   -----
+
+   450 as the maximum limit as \(x\) (years after 1950) approaches infinity.
+
+** Question 7
+
+   Provide a (general or real world related) question that you would
+   like answered based on your work here.
+   This should not be something that you could answer yourself with
+   a little work.
+
+   -----
+
+   How could we leverage artificial intelligence to optimize CO_2 emissions?
+
+** Question 8
+
+   Summarize your work on questions 1-5 in a short paragraph
+   as if it were a news article
+
+   -----
+
+   Carbon dioxide in the Earth's atmosphere is growing at an exponential rate.
+   This is a concern as atmospheric carbon dioxide has been known to be a
+   significant factor in climate change on Earth.
+   Climate change can be devastating, as shown in the note provided.
+   My work predicts the amount of atmospheric carbon dioxide for each
+   year and the rate at which it is produced each year.
+   Additionally, it visualizes those predictions on graphs generated
+   by matplotlib.
+
+* Footnotes
+
+[fn:2] According to IPCC Fifth Assessment Report (AR5) page 22: https://www.ipcc.ch/pdf/assessment-report/ar5/syr/AR5_SYR_FINAL_SPM.pdf
+
+[fn:1] Warren, R. 2006. Impacts of global climate change at different annual mean global temperature increases, in H.J. Schellnhuber et al. (eds.) Avoiding Dangerous Climate Change. Cambridge University Press, Cambridge
